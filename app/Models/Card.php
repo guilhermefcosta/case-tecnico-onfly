@@ -13,16 +13,14 @@ class Card extends Model
 
     protected $fillable = ['card_number', 'balance', 'user_id'];
 
-    // public function expenses()
-    // {
-    //     return $this->hasMany(Expense::class);
-    // }
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
+    }
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-        
     
 }

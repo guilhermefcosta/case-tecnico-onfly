@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cards', function (Blueprint $table) {
+        Schema::create('expenses', function (Blueprint $table) {
             $table->id();
-            $table->string('card_number')->comment('Numero do cartao')->index();
-            $table->unsignedDecimal('balance', 10, 2)->comment('Saldo');
-            $table->foreignId('user_id')->references('id')->on('users');
+            $table->foreignId('card_id')->references('id')->on('cards');
+            $table->unsignedDecimal('value', 10, 2);
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cards');
+        Schema::dropIfExists('expenses');
     }
 };
