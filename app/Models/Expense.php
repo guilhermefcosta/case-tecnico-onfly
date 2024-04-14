@@ -13,6 +13,12 @@ class Expense extends Model
 
     protected $fillable = ['card_id', 'value'];
 
+    
+    /**
+     *
+     * @return Card
+     * 
+     */
     public function card() {
         return $this->belongsTo(Card::class);
     }
