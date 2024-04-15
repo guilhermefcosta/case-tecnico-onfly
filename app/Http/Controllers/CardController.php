@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Card;
+use App\Models\User;
+use App\Services\UserService;
 use App\Services\ValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -18,31 +20,45 @@ class CardController extends Controller
         return Card::all();
     }
 
+    public function list(Request $request, UserService $userService, User $user)
+    {
+        $userService->checksUserOwnerOfCardOrAdmin($request, $user);
+        
+        $cartoes = $user->cards;
+        
+        return $cartoes;
+    }
+
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, ValidationService $validationService)
+    public function store(Request $request, ValidationService $validationService, UserService $userService, User $user)
     {
-        $validData = $validationService->validateCardCreation($request);
+        $validData = $validationService->validateCardCreation($request, $user, $userService);
 
-        $card = Card::create($validData);
+        $card = $user->cards()->create($validData);
 
-        return response()->json($card, 201);    }
+        return response()->json($card, 201);    
+    }
 
     /**
      * Display the specified resource.
      */
-    public function show(Card $card)
+    public function show(Request $request, UserService $userService, User $user, Card $card)
     {
+
+        $userService->checksUserOwnerOfCardOrAdmin($request, $user);
+        
         return $card;
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified resource.
      */
-    public function update(Request $request, Card $card, ValidationService $validationService)
+    public function update(Request $request, ValidationService $validationService, User $user, Card $card)
     {
-        $validData = $validationService->validateCardUpdate($request);
+        // var_dump($card->id);die;
+        $validData = $validationService->validateCardUpdate($request, $card);
 
         $card->update($validData);
 
@@ -52,12 +68,14 @@ class CardController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Card $card)
+    public function destroy(Request $request, UserService $userService, User $user, Card $card)
     {
+        $userService->checksUserOwnerOfCardOrAdmin($request, $user);
+
         $card->delete();
 
         return response()->json([
-            'message' => 'card deleted'
+            'message' => 'Card deleted.'
         ]);
     }
 }

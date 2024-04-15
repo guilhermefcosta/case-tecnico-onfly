@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\UserService;
 use App\Services\ValidationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -13,7 +15,7 @@ class UserController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
+    {        
         return User::all();
     }
 
@@ -32,9 +34,10 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show(Request $request, User $user, ValidationService $validationService)
     {
-        return  $user;
+        $validationService->verifyUserAction($request, $user); 
+        return $user;
     }
 
     /**
@@ -42,18 +45,17 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user, ValidationService $validationService)
     {
-        $validData = $validationService->validateUserUpdate($request);
-
+        $validData = $validationService->validateUserUpdate($request, $user);
         $user->update($validData);
-
         return $user;
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user, ValidationService $validationService)
     {
+        $validationService->verifyUserAction($request, $user); 
         $user->delete();
 
         return response()->json([

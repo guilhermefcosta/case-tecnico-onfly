@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Card;
 use App\Models\Expense;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class CardService {
+class CardService 
+{
 
     public function checkCardBalance (Card $card, float $value)
     {
@@ -25,13 +27,14 @@ class CardService {
         try {
             DB::beginTransaction();
 
-            $expense = Expense::create($expenseData);
-            $card->balance -= $expenseData['value'];
+            $expense = $card->expenses()->create($expenseData); // cria despesa
+            $card->balance -= $expenseData['value']; // atualiza o saldo
             $card->save();
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            var_dump($e->getMessage());die;
         }
         
         return $expense;
@@ -46,7 +49,7 @@ class CardService {
 
             $expense->update($expenseData);
             $card->balance -= $expenseData['value'];
-            $card->save();
+            $card->save(); // atualiza o saldo
 
             DB::commit();
         } catch (\Exception $e) {

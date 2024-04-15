@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Card;
 use App\Models\Expense;
 use App\Services\CardService;
+use App\Services\UserService;
 use App\Services\ValidationService;
 use Illuminate\Http\Request;
 
@@ -18,15 +19,22 @@ class ExpenseController extends Controller
         return Expense::all();
     }
 
+
+    public function list(Request $request, UserService $userService, Card $card)
+    {
+        $userService->checksUserOwnerOfCardOrAdmin($request, $card->user);
+
+        return $card->expenses;
+    }
+
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, ValidationService $validationService, CardService $cardService)
+    public function store(Request $request, ValidationService $validationService, CardService $cardService, UserService $userService, Card $card)
     {
         $validData = $validationService->validateExpenseCreation($request);
+        $userService->checksUserOwnerOfCardOrAdmin($request, $card->user);
 
-        $card = Card::findOrFail($validData['card_id']);
-        
         if ($cardService->checkCardBalance($card, $validData['value'])) {
 
             $expense = $cardService->makeTransaction($card, $validData);
@@ -40,28 +48,20 @@ class ExpenseController extends Controller
         } else {
             return response()->json(['error' => 'The expense is greater than the balance.'], 400);
         }   
-
-
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Expense $expense)
+    public function show(Request $request, UserService $userService, Card $card, Expense $expense)
     {
-        return  $expense;
-
+        $userService->checksUserOwnerOfCardOrAdmin($request, $card->user);
+        return $expense;
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Expense $expense, ValidationService $validationService, CardService $cardService)
+
+    public function update(Request $request, ValidationService $validationService, CardService $cardService, UserService $userService, Card $card, Expense $expense )
     {
         $validData = $validationService->validateExpenseUpdate($request);
+        $userService->checksUserOwnerOfCardOrAdmin($request, $card->user); // valida se o cartao da despesa é do usuario
 
-        $card = Card::findOrFail($expense->card_id);
-        
         if ($cardService->checkCardBalance($card, $validData['value'])) {
 
             $expense = $cardService->updateTransaction($card, $expense, $validData);
@@ -85,8 +85,10 @@ class ExpenseController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Expense $expense)
+    public function destroy(Request $request, UserService $userService, Card $card, Expense $expense)
     {
+        $userService->checksUserOwnerOfCardOrAdmin($request, $card->user); // valida se o cartao da despesa é do usuario
+
         $expense->delete();
 
         return response()->json(['message' => 'expense deleted' ], 200);
