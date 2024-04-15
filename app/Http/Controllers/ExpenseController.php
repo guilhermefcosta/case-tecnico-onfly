@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Card;
 use App\Models\Expense;
 use App\Services\CardService;
+use App\Services\EmailService;
 use App\Services\UserService;
 use App\Services\ValidationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class ExpenseController extends Controller
 {
@@ -30,7 +32,7 @@ class ExpenseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, ValidationService $validationService, CardService $cardService, UserService $userService, Card $card)
+    public function store(Request $request, ValidationService $validationService, CardService $cardService, EmailService $emailService, UserService $userService, Card $card)
     {
         $validData = $validationService->validateExpenseCreation($request);
         $userService->checksUserOwnerOfCardOrAdmin($request, $card->user);
@@ -40,6 +42,7 @@ class ExpenseController extends Controller
             $expense = $cardService->makeTransaction($card, $validData);
 
             if ($expense) {
+                $emailService::sendEmailExpense($expense);                
                 return response()->json($expense, 201);
             } else {
                 return response()->json(['error' => 'Failed to create expense.'], 500);
