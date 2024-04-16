@@ -1,4 +1,5 @@
 ## Case técnico Onfly - PHP Laravel Back-end Sênior
 
-### Testes
 
+Leia a documentação em DOCUMENTAÇÃO_CASE_TÉCNICO_ONFLY.pdf
+ 
