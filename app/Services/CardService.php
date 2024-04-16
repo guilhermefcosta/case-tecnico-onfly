@@ -41,23 +41,51 @@ class CardService
             
     }
 
-    public function updateTransaction(Card $card, Expense $expense, array $expenseData)
-    {
 
+    public function makeCorrectionOnCardBalanceOnUpdate(Card $card, Expense $expense, array $expenseData)
+    {
         try {
             DB::beginTransaction();
 
-            $expense->update($expenseData);
-            $card->balance -= $expenseData['value'];
-            $card->save(); // atualiza o saldo
+            if ($expense->value >= $expenseData['value']) {
+                $card->balance += $expense->value - $expenseData['value'];
+                $card->save();
+            } else {
+                $newDebit =  $expenseData['value'] - $expense->value;
+
+                if (($card->balance - $newDebit) < 0) {
+                    return response()->json(['error' => 'The expense is greater than the balance.'], 400);
+                } 
+
+                $card->balance -= $newDebit;
+                $card->save();
+            }
+
+            $expense->value = $expenseData['value'];
+            $expense->save();
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            return response()->json(['error' => 'Failed to update expense.'], 500)->throwResponse();
         }
-        
-        return $expense;
-            
+
+        return [];
+    }
+
+    public function makeCorrectionOnCardBalanceOnDelete(Card $card, Expense $expense)
+    {
+        try {
+            DB::beginTransaction();
+
+            $card->balance += $expense->value;
+            $card->save();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to delete expense.'], 500)->throwResponse();
+        }
     }
 
 }

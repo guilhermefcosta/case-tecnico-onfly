@@ -64,21 +64,13 @@ class ExpenseController extends Controller
     {
         $validData = $validationService->validateExpenseUpdate($request);
         $userService->checksUserOwnerOfCardOrAdmin($request, $card->user); // valida se o cartao da despesa é do usuario
+        
+        // Faz a correcao no valor do saldo do cartão para depois validar se ele tem condicoes de enferentar o valor da nova despesa
+        $resp = $cardService->makeCorrectionOnCardBalanceOnUpdate($card, $expense, $validData);
 
-        if ($cardService->checkCardBalance($card, $validData['value'])) {
-
-            $expense = $cardService->updateTransaction($card, $expense, $validData);
-
-            if ($expense) {
-                return response()->json($expense, 201);
-            } else {
-                return response()->json(['error' => 'Failed to create expense.'], 500);
-            }
-
-        } else {
-            return response()->json(['error' => 'The expense is greater than the balance.'], 400);
-        }   
-
+        if ($resp) {
+            return $resp;
+        }
 
         $expense->update($validData);
 
@@ -88,9 +80,11 @@ class ExpenseController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, UserService $userService, Card $card, Expense $expense)
+    public function destroy(Request $request, UserService $userService, CardService $cardService, Card $card, Expense $expense)
     {
         $userService->checksUserOwnerOfCardOrAdmin($request, $card->user); // valida se o cartao da despesa é do usuario
+
+        $cardService->makeCorrectionOnCardBalanceOnDelete($card, $expense);
 
         $expense->delete();
 

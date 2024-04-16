@@ -33,10 +33,10 @@ class ValidationService
         $this->verifyUserAction($request, $user);
 
         $validatedData = $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'email|required|unique:users|max:255',
+            'name' => 'max:255',
+            'email' => 'email|unique:users|max:255',
             // 'password' => 'required|max:255',
-            'role' => 'required|in:1,2'
+            'role' => 'in:1,2'
         ]);
 
         return $validatedData;
@@ -75,7 +75,7 @@ class ValidationService
     {
 
         $validatedData = $request->validate([
-            'balance' => 'required|gte:0',
+            'balance' => 'gte:0',
         ]);
 
         $this->userService->checksUserOwnerOfCardOrAdmin($request, $card->user);
@@ -96,7 +96,7 @@ class ValidationService
     public function validateExpenseUpdate(Request $request) 
     {
         $validatedData = $request->validate([
-            'value' => 'required|gte:0'
+            'value' => 'gte:0'
         ]);
 
         return $validatedData;
