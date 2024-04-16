@@ -22,12 +22,15 @@ class EmailService
             });
         }
 
-        /* envia emails usuario dono da despesa */
-        Mail::send('email.despesacriada', ['expense' => $expense, 'card' => $expense->card, 'user' => $expense->card->user], function ($m) use ($expense) {
-            $m->from('emailtesteonfly@gmail.com');
-            $m->to($expense->card->user->email);
-            $m->subject("Despesa criada - Case técnico Onfly - Guilherme Ferreira");
-        });
+        /* envia email para usuario dono da despesa caso ele seja adm */
+        if ($expense->card->user->role == 2) {
+            Mail::send('email.despesacriada', ['expense' => $expense, 'card' => $expense->card, 'user' => $expense->card->user], function ($m) use ($expense) {
+                $m->from('emailtesteonfly@gmail.com');
+                $m->to($expense->card->user->email);
+                $m->subject("Despesa criada - Case técnico Onfly - Guilherme Ferreira");
+            });
+        }
+
 
     }
 
